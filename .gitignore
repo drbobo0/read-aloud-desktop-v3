@@ -1,0 +1,27 @@
+# Compiled programs are rebuilt by Build.ps1 / Install.cmd.
+*.exe
+*.exe.config
+
+# Generated for the installing user's folder; Install.cmd recreates this.
+/native-host-v3.json
+
+# Machine-specific preservation checks stay local.
+/tests/v1-before.json
+/tests/previous-versions-before.json
+__pycache__/
+*.pyc
+
+# Release archives and editor files.
+/dist/
+*.zip
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+.env
+.env.*
+*.pfx
+*.p12
+*.pem

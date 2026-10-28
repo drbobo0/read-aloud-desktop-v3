@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Read Aloud Desktop V3</title><link rel="stylesheet" href="dark-popup.css"></head>
+<body>
+<header><img src="icon128.png" width="38" height="38" alt=""><div><h1>Read Aloud Desktop <span>V3</span></h1><p>Your voice. Across your desktop.</p></div></header>
+<section class="status-card"><div class="status-heading"><span id="dot"></span><strong id="connection">Checking connection…</strong></div><p id="status" role="status" aria-live="polite">Loading…</p></section>
+<div class="actions"><button class="primary" id="enable">Enable / retry</button><button id="disable">Disable</button><button id="player">Open controls</button></div>
+<div class="actions secondary"><button id="pause">Pause / resume</button><button id="stop">Stop</button><button id="test">Test voice</button><button id="voices">Voice / speed</button></div>
+<p class="hint">Keep Chrome and the original Read Aloud extension running. Disable V2’s desktop shortcuts before enabling V3. The speaker icon in Windows’ tray opens quick controls.</p>
+<details><summary>Shortcuts &amp; preferences</summary>
+<form id="preferences">
+<label class="shortcut">Player size<select id="playerSize"><option value="small">Small (current size)</option><option value="medium">Medium</option><option value="large">Large</option></select></label>
+<label class="check"><input type="checkbox" id="fadeWhenIdle">Fade the compact pill after 5 seconds; brighten on hover</label>
+<label class="check"><input type="checkbox" id="positionLocked">Lock position to prevent accidental dragging</label>
+<label class="shortcut">Default corner<select id="placement"><option value="bottom-right">Bottom right</option><option value="top-right">Top right</option></select></label>
+<p id="position-hint" class="hint">Drag the Read label to move the player anywhere.</p>
+<button type="button" id="reset-position">Reset to selected corner</button>
+<fieldset><legend>Optional text cleanup</legend>
+<p class="hint">Applies to new selections. Choose what to skip; the passage view shows exactly what is sent to Read Aloud.</p>
+<label class="check"><input type="checkbox" id="cleanupUrls">Skip web addresses (keep link labels)</label>
+<label class="check"><input type="checkbox" id="cleanupSymbols">Skip repeated symbols, such as *** or ===</label>
+<label class="check"><input type="checkbox" id="cleanupCode">Skip code blocks enclosed in ``` or ~~~</label>
+</fieldset>
+<p class="hint">Click a shortcut box and press your preferred keys. Use Ctrl or Alt with a letter, number, F1–F12, or Space.</p>
+<label class="shortcut">Read selection<input id="key-read" readonly aria-label="Read selection shortcut"></label>
+<label class="shortcut">Pause / resume<input id="key-pause" readonly aria-label="Pause and resume shortcut"></label>
+<label class="shortcut">Stop<input id="key-stop" readonly aria-label="Stop shortcut"></label>
+<label class="shortcut">Expand / collapse pill<input id="key-player" readonly aria-label="Expand or collapse player shortcut"></label>
+<label class="check"><input type="checkbox" id="showOnRead">Show compact pill when reading starts</label>
+<label class="check"><input type="checkbox" id="notifications">Show notifications when something needs attention</label>
+<p id="save-status" class="hint" role="status" aria-live="polite"></p>
+<div class="actions"><button type="submit" class="primary" id="save">Save preferences</button><button type="button" id="reset">Restore defaults</button></div>
+</form></details>
+<footer>Playback status follows your requests. Read Aloud does not report its live position to this bridge.</footer>
+<script src="config.js"></script><script src="popup.js"></script>
+</body></html>
