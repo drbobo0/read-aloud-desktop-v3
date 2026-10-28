@@ -60,6 +60,10 @@ async function request(message) {
   const defaults = copy(context.BridgeConfig.defaults);
   assert.equal(defaults.playerSize, 'small');
   assert.equal(defaults.fadeWhenIdle, true);
+  assert.equal(defaults.autoHide, true); assert.equal(defaults.autoHideSeconds, 5);
+  const beforeAutoHide = copy(defaults); delete beforeAutoHide.autoHide; delete beforeAutoHide.autoHideSeconds;
+  assert.equal(context.BridgeConfig.normalize(beforeAutoHide).autoHide, true, 'Existing users must get the new default');
+  assert.equal(context.BridgeConfig.normalize(beforeAutoHide).autoHideSeconds, 5);
   assert.equal(defaults.positionLocked, false);
   const raw = '  Français — العربية *** https://example.com  ';
   assert.equal(context.TextCleanup.clean(raw, defaults), raw, 'Cleanup must be completely opt-in');
@@ -98,6 +102,16 @@ async function request(message) {
   assert.equal(saved.settings.playerSize, 'large', 'Invalid menu preferences must not be persisted');
   await first.message({ type: 'preference', name: 'fadeWhenIdle', value: 'false' }); await tick();
   assert.equal(saved.settings.fadeWhenIdle, true, 'On/off preferences must require booleans');
+  await first.message({ type: 'preference', name: 'autoHideSeconds', value: 3 }); await tick();
+  assert.equal(saved.settings.autoHideSeconds, 3, 'The tray menu must save the selected delay');
+  await first.message({ type: 'preference', name: 'autoHide', value: false }); await tick();
+  assert.equal(saved.settings.autoHide, false, 'Automatic hiding must be switchable off');
+  await first.message({ type: 'preference', name: 'autoHideSeconds', value: 4 }); await tick();
+  assert.equal(saved.settings.autoHideSeconds, 3, 'Unsupported delays must not overwrite the saved choice');
+  await first.message({ type: 'preference', name: 'autoHideSeconds', value: '5' }); await tick();
+  assert.equal(saved.settings.autoHideSeconds, 3, 'Delay values must be numeric');
+  await first.message({ type: 'preference', name: 'autoHide', value: 'false' }); await tick();
+  assert.equal(saved.settings.autoHide, false, 'The hide switch must require a boolean');
   await request({ type: 'saveSettings', settings: defaults });
   await first.message({ type: 'command', method: 'play', text: 'Français — العربية', newSession: true }); await tick();
   assert.deepEqual(sent.at(-1), { method: 'play', text: 'Français — العربية' });

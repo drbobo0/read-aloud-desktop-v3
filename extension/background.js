@@ -112,7 +112,7 @@ function command(input) {
 async function handleCommand(input) {
   if (input.method === 'disable') { await disable(); return; }
   if (input.method === 'setPreference') {
-    const allowed = ['playerSize', 'placement', 'fadeWhenIdle', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode'];
+    const allowed = ['playerSize', 'placement', 'fadeWhenIdle', 'autoHide', 'autoHideSeconds', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode'];
     if (!allowed.includes(input.name)) { problem('Unknown preference.'); return; }
     const candidate = { ...settings, [input.name]: input.value };
     if (input.name === 'placement') candidate.customPosition = null;

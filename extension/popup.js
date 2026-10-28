@@ -16,10 +16,17 @@ function fill(settings) {
   document.getElementById('notifications').checked = draft.notifications;
   document.getElementById('placement').value = draft.placement;
   document.getElementById('playerSize').value = draft.playerSize;
-  for (const name of ['fadeWhenIdle', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode']) document.getElementById(name).checked = draft[name];
+  document.getElementById('autoHideSeconds').value = String(draft.autoHideSeconds);
+  for (const name of ['fadeWhenIdle', 'autoHide', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode']) document.getElementById(name).checked = draft[name];
+  hideDelayState();
   positionHint();
 }
 function positionHint() { document.getElementById('position-hint').textContent = document.getElementById('positionLocked').checked ? 'Dragging is locked. Corner presets and reset still work.' : draft?.customPosition ? 'Your dragged position is saved. Reset below to return to a corner.' : 'Drag the Read label to move the player anywhere. Its position is remembered.'; }
+function hideDelayState() {
+  const enabled = document.getElementById('autoHide').checked;
+  document.getElementById('autoHideSeconds').disabled = !enabled;
+  document.getElementById('fadeWhenIdle').disabled = enabled;
+}
 function explain(message, error = false) { saveStatus.textContent = message; saveStatus.classList.toggle('error', error); }
 async function send(message) {
   const reply = await chrome.runtime.sendMessage(message);
@@ -36,6 +43,7 @@ chrome.storage.onChanged.addListener(changes => {
 });
 document.getElementById('preferences').addEventListener('change', () => { dirty = true; });
 document.getElementById('positionLocked').addEventListener('change', positionHint);
+document.getElementById('autoHide').addEventListener('change', hideDelayState);
 document.getElementById('placement').addEventListener('change', () => {
   if (!draft) return;
   draft.customPosition = null; positionHint(); explain('Click Save preferences to move to the selected corner.');
@@ -78,7 +86,8 @@ document.getElementById('preferences').addEventListener('submit', async event =>
     draft.notifications = document.getElementById('notifications').checked;
     draft.placement = document.getElementById('placement').value;
     draft.playerSize = document.getElementById('playerSize').value;
-    for (const name of ['fadeWhenIdle', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode']) draft[name] = document.getElementById(name).checked;
+    draft.autoHideSeconds = Number(document.getElementById('autoHideSeconds').value);
+    for (const name of ['fadeWhenIdle', 'autoHide', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode']) draft[name] = document.getElementById(name).checked;
     const result = await send({ type: 'saveSettings', settings: BridgeConfig.normalize(draft) });
     fill(result.settings); explain(result.message);
   } catch (error) { explain(error.message, true); }

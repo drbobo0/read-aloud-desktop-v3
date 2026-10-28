@@ -59,13 +59,17 @@ try:
     assert result['settings']['customPosition'] is None, 'Older settings must start without a dragged position'
     assert result['settings']['playerSize'] == 'small'
     assert result['settings']['fadeWhenIdle'] is True
+    assert result['settings']['autoHide'] is True and result['settings']['autoHideSeconds'] == 5
     assert result['settings']['positionLocked'] is False
     assert not any(result['settings'][name] for name in ('cleanupUrls', 'cleanupSymbols', 'cleanupCode'))
     preferences = custom_settings()
-    preferences.update(playerSize='large', positionLocked=True, fadeWhenIdle=False, cleanupUrls=True, cleanupSymbols=True, cleanupCode=True)
+    preferences.update(playerSize='large', positionLocked=True, fadeWhenIdle=False, autoHide=False, autoHideSeconds=3, cleanupUrls=True, cleanupSymbols=True, cleanupCode=True)
     result = host.configure(preferences)
     assert result['ok'] and all(result['settings'][name] == value for name, value in preferences.items() if name not in ('read', 'pause', 'stop', 'player'))
     preferences['playerSize'] = 'huge'
+    assert not host.configure(preferences)['ok']
+    preferences['playerSize'] = 'small'
+    preferences['autoHideSeconds'] = 4
     assert not host.configure(preferences)['ok']
     assert host.configure(custom_settings())['ok']
     top_settings = custom_settings()

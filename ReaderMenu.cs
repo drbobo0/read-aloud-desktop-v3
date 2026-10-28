@@ -10,6 +10,7 @@ namespace ReadAloudDesktopV3 {
         readonly BridgeContext bridge;
         readonly ToolStripMenuItem show, hide, playback, stop;
         readonly ToolStripMenuItem small, medium, large, bottom, top, locked, fade, urls, symbols, code;
+        readonly ToolStripMenuItem autoHide, hideDelay, hideThree, hideFive;
         internal ReaderMenu(BridgeContext context) {
             bridge = context;
             Control = new ContextMenuStrip { BackColor = Color.FromArgb(38,38,41), ForeColor = Color.FromArgb(239,239,243), Renderer = new ToolStripProfessionalRenderer(new MenuColors()), ShowImageMargin = false, ShowCheckMargin = true };
@@ -29,6 +30,10 @@ namespace ReadAloudDesktopV3 {
             top = Choice(placement,"Top right","placement","top-right");
             locked = Add("Lock position",delegate { bridge.SetPreference("positionLocked",!bridge.Settings.positionLocked); });
             fade = Add("Fade when idle",delegate { bridge.SetPreference("fadeWhenIdle",!bridge.Settings.fadeWhenIdle); });
+            autoHide = Add("Hide pill after inactivity",delegate { bridge.SetPreference("autoHide",!bridge.Settings.autoHide); });
+            hideDelay = Add("Hide after",null);
+            hideThree = Choice(hideDelay,"3 seconds","autoHideSeconds",3);
+            hideFive = Choice(hideDelay,"5 seconds","autoHideSeconds",5);
             var cleanup = Add("Text cleanup",null);
             urls = Toggle(cleanup,"Skip web addresses","cleanupUrls",delegate { return bridge.Settings.cleanupUrls; });
             symbols = Toggle(cleanup,"Skip repeated symbols","cleanupSymbols",delegate { return bridge.Settings.cleanupSymbols; });
@@ -51,7 +56,7 @@ namespace ReadAloudDesktopV3 {
         ToolStripMenuItem Add(string label,EventHandler action) {
             var item = new ToolStripMenuItem(label,null,action); Control.Items.Add(item); return item;
         }
-        ToolStripMenuItem Choice(ToolStripMenuItem parent,string label,string name,string value) {
+        ToolStripMenuItem Choice(ToolStripMenuItem parent,string label,string name,object value) {
             var item = new ToolStripMenuItem(label,null,delegate { bridge.SetPreference(name,value); }); parent.DropDownItems.Add(item); return item;
         }
         ToolStripMenuItem Toggle(ToolStripMenuItem parent,string label,string name,Func<bool> current) {
@@ -66,6 +71,9 @@ namespace ReadAloudDesktopV3 {
             small.Checked = s.playerSize == "small"; medium.Checked = s.playerSize == "medium"; large.Checked = s.playerSize == "large";
             bottom.Checked = s.customPosition == null && s.placement == "bottom-right"; top.Checked = s.customPosition == null && s.placement == "top-right";
             locked.Checked = s.positionLocked; fade.Checked = s.fadeWhenIdle;
+            autoHide.Checked = s.autoHide; hideDelay.Enabled = s.autoHide;
+            fade.Enabled = !s.autoHide;
+            hideThree.Checked = s.autoHideSeconds == 3; hideFive.Checked = s.autoHideSeconds == 5;
             urls.Checked = s.cleanupUrls; symbols.Checked = s.cleanupSymbols; code.Checked = s.cleanupCode;
         }
         public void Dispose() { Control.Dispose(); }

@@ -2,19 +2,32 @@
 
 A Windows desktop companion for [Read Aloud: A Text to Speech Voice Reader](https://chromewebstore.google.com/detail/read-aloud-a-text-to-speec/hdhinadidafjejdhmfkjgnolgimiaplp). Select text in a desktop app and press **Alt + V** to read it using your existing Chrome voices. Control reading from a small, draggable dark pill or a Windows tray icon.
 
-V3 adds idle fading, three sizes, a position lock and optional text cleanup. **Version 3.1 adds hiding when reading truly finishes**, using a separate compatible copy of Read Aloud. Pauses, voice loading and reading errors do not trigger hiding. V1, V2 and the original store extension remain separate. Screenshot reading is not included.
+**Version 3.2 automatically hides the compact pill after five seconds without interaction, even while speech continues.** Choose three or five seconds, or turn timed hiding off. The setting is enabled by default for new and existing users. V3 also includes a tray icon, three sizes, a position lock and optional text cleanup. V1, V2 and the original store extension remain separate. Screenshot reading is not included.
 
-## Hide when reading finishes (3.1)
+## Automatic hiding (default)
+
+In the Chrome popup, open **Shortcuts & preferences**, then use **Hide pill after inactivity** and **Hide after**. The same choices are in the player and tray menus and save immediately there. Chrome popup changes take effect with **Save preferences**.
+
+- **Default: enabled, five seconds.** Three seconds is also available. Turning the switch off disables timed hiding.
+- Only the collapsed pill hides. Hovering, dragging, opening its menu or expanding the reading controls keeps it available and restarts the delay.
+- Hiding does not stop or pause speech, clear the passage, release shortcuts or exit the helper. The tray icon stays available.
+- Starting another selection shows the pill again when **Show compact pill when reading starts** is enabled. The tray icon or controls shortcut can also show it again.
+- This works with the **original Read Aloud extension**. No compatible copy or voice setup change is needed for timed hiding.
+- With timed hiding off, the existing idle-fade option becomes available. An installed compatible reader can still hide the pill after actual completion, sometimes before the timed delay expires.
+
+## Optional: hide when reading finishes (compatible reader)
 
 The official Read Aloud extension accepts playback commands but does not report completion to other extensions. Reinstalling the desktop bridge alone cannot add that signal. The optional compatible copy adds a small notification from Read Aloud's actual document-end callback. It has a separate Chrome identity, name and settings.
 
-1. Use the **3.1 Windows ZIP**, which includes the `compatible-reader` folder, or generate that folder from your installed original using **Prepare-CompatibleReader.ps1** as described below.
+For hiding **only** at completion, first turn off **Hide pill after inactivity**. This optional mode is separate from the default timed behavior.
+
+1. Use the Windows ZIP, which includes the optional `compatible-reader` folder, or generate that folder from your installed original using **Prepare-CompatibleReader.ps1** as described below.
 2. In **chrome://extensions**, choose **Load unpacked** and select the **compatible-reader** folder. Its Chrome name is **Read Aloud - Desktop Compatible V3**. Keep the folder in a permanent location.
 3. Choose your preferred voice and speed in this compatible copy's **Extension options**. It has separate settings. Some account-linked services are bound to the official extension; keep using that extension for those services if the compatible copy cannot sign in.
 4. Reload **Read Aloud Desktop Bridge V3** from its updated `extension` folder and click **Enable / retry**. If you are still using V2, disable V2's desktop shortcuts before enabling V3.
 5. Read a passage. The pill remains available while reading, including while paused, and hides after the reader reports completion. The tray icon remains available. A new selection or the tray icon brings the player back.
 
-The bridge automatically uses the compatible copy when it is available. Otherwise, the original reader still works with manual closing. There is no guessed reading duration or timer-based hiding. Selected text stays available in memory for restarting. A failed reading leaves controls available and shows an error. Old completion messages cannot hide a newer passage.
+The bridge automatically uses the compatible copy when it is available. Otherwise, the original reader still works with timed or manual closing. Completion hiding uses a real reader notification, independent of the optional inactivity timer. Selected text stays available in memory for restarting. Reading errors do not trigger completion hiding. Old completion messages cannot hide a newer passage.
 
 To prepare a separate compatible folder from an existing installed Read Aloud package:
 
@@ -38,13 +51,13 @@ If more than one profile or version is found, supply `-Source` with the original
 4. Open **Read Aloud Desktop Bridge V3** from Chrome's extensions menu and click **Enable / retry**, then **Test voice**.
 5. Select text in a desktop app and press **Alt + V**, then release the keys.
 
-V3 has its own extension identity, preferences, native helper and registration. It starts with Small size, bottom-right placement, fading on, position unlocked and all cleanup options off. V2's saved preferences remain with V2. To return to V2, disable V3 and re-enable V2.
+V3 has its own extension identity, preferences, native helper and registration. It starts with Small size, bottom-right placement, five-second automatic hiding on, position unlocked and all cleanup options off. V2's saved preferences remain with V2. To return to V2, disable V3 and re-enable V2.
 
 ## New controls
 
 **Windows tray icon.** While V3 is enabled and connected to Chrome, a purple speaker appears in the notification area by the clock, possibly inside the **^ hidden-icons menu**. Double-click it to show the compact player. Right-click for show/hide, reading controls, pause/resume, stop and preferences. **Disable V3** stops reading, releases shortcuts and removes the tray icon. Open the Chrome extension and choose **Enable / retry** to start it again. Windows chooses whether new tray icons appear beside the clock or under the arrow.
 
-**Fade when idle.** After five seconds without interaction, the compact pill smoothly fades to 45% opacity. Hover over it to restore full visibility immediately. Showing the player, starting another selection and using controls also brighten it. Expanded controls and open menus stay fully visible. Switch fading off in Preferences or the tray menu to keep the pill opaque.
+**Fade when idle.** With automatic hiding turned off, the compact pill can smoothly fade to 45% opacity after five seconds. Hover over it to restore full visibility. Expanded controls and open menus stay fully visible. Switch fading off as well to keep the pill opaque and visible.
 
 **Adjustable size.** Choose **Small**, **Medium** or **Large**. Small retains V2's 112 × 28 logical-pixel size; Medium is 140 × 35 and Large is 168 × 42. Windows display scaling is applied separately, with native-resolution fonts and vector icons. Corner placement stays anchored when size changes; a freely dragged position retains its top-left coordinates, subject to monitor bounds.
 
@@ -108,4 +121,4 @@ After preparing a compatible reader, `python tests/compatible_reader_checks.py` 
 
 The optional `python tests/native_checks.py --windows-hotkeys` tests shortcut conflicts with temporary keys and releases them without touching the clipboard. Local, untracked checksum snapshots can additionally verify that earlier versions are untouched; those snapshots are not needed for the portable checks.
 
-The original Read Aloud project is available at [ken107/read-aloud](https://github.com/ken107/read-aloud), copyright 2016 Hai Phan, under the MIT license included in `compatibility/ReadAloud-LICENSE.txt`. The source repository contains the desktop companion and compatibility adapter/preparation script. The 3.1 Windows ZIP additionally includes the separately named compatible reader, based on Read Aloud 2.28.1; its included notice lists the changes. No voice providers are bundled.
+The original Read Aloud project is available at [ken107/read-aloud](https://github.com/ken107/read-aloud), copyright 2016 Hai Phan, under the MIT license included in `compatibility/ReadAloud-LICENSE.txt`. The source repository contains the desktop companion and compatibility adapter/preparation script. The Windows ZIP additionally includes the optional, separately named compatible reader, based on Read Aloud 2.28.1; its notice lists the changes. No voice providers are bundled.

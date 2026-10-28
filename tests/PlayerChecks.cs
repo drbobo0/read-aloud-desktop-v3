@@ -13,6 +13,7 @@ namespace ReadAloudDesktopV3 {
                 Application.EnableVisualStyles();
                 Require(AreDpiAwarenessContextsEqual(GetThreadDpiAwarenessContext(),new IntPtr(-4)), "The executable must be PerMonitorV2 DPI aware.");
                 var context = new BridgeContext(true, false);
+                Require(context.Settings.autoHide && context.Settings.autoHideSeconds == 5,"Automatic hiding must default to five seconds.");
                 using (var form = new PlayerForm(context)) {
                     context.Player = form;
                     Require(!form.Visible && !form.Expanded, "New player must remain hidden and collapsed.");
@@ -34,6 +35,26 @@ namespace ReadAloudDesktopV3 {
                     context.Preview = false;
                     context.FinishReading("current");
                     Require(form.Visible,"Beginning a new reading must invalidate the older completion token.");
+                    context.LoadPassage("Reading continues after the compact pill disappears.",false);
+                    context.Playback = "playing";
+                    context.Settings.fadeWhenIdle = false;
+                    form.Reveal(); DateTime started = DateTime.UtcNow;
+                    form.StepFade(started.AddSeconds(4),false);
+                    Require(form.Visible,"The default delay must not hide the player before five seconds.");
+                    form.StepFade(started.AddSeconds(6),false);
+                    Require(!form.Visible && context.Playback == "playing" && context.Passage.Text.StartsWith("Reading continues"),"Automatic hiding must preserve speech, passage and helper state, even with fading off.");
+                    context.Settings.autoHideSeconds = 3; form.Show(); form.Reveal(); started = DateTime.UtcNow;
+                    form.StepFade(started.AddSeconds(2),false); Require(form.Visible,"Three-second hiding must wait for the selected delay.");
+                    form.StepFade(started.AddSeconds(4),false); Require(!form.Visible,"The three-second option must hide the pill.");
+                    context.Settings.autoHideSeconds = 5; form.Show(); form.Reveal(); started = DateTime.UtcNow;
+                    form.StepFade(started.AddSeconds(6),true); Require(form.Visible,"Hovering must keep controls available.");
+                    form.StepFade(started.AddSeconds(10),false); Require(form.Visible,"The delay must restart after interaction.");
+                    form.StepFade(started.AddSeconds(12),false); Require(!form.Visible,"The player must hide after the restarted delay expires.");
+                    form.Show(); form.SetExpanded(true); form.StepFade(DateTime.UtcNow.AddMinutes(1),false);
+                    Require(form.Visible && form.Expanded,"Expanded controls must remain available.");
+                    form.SetExpanded(false); context.Settings.autoHide = false;
+                    form.StepFade(DateTime.UtcNow.AddMinutes(1),false); Require(form.Visible,"Turning automatic hiding off must keep the player visible.");
+                    context.Settings.fadeWhenIdle = true;
                     form.Reveal();
                     for (int i = 0; i < 12; i++) form.StepFade(DateTime.UtcNow.AddSeconds(6),false);
                     Require(Math.Abs(form.Opacity-.45) < .01, "Idle pill must fade to 45 percent after five seconds.");
@@ -125,8 +146,15 @@ namespace ReadAloudDesktopV3 {
                     foreach (ToolStripItem item in context.Menu.Control.Items) {
                         if (item.Text == "Lock position") { item.PerformClick(); Require(context.Settings.positionLocked,"Menu lock must apply immediately."); item.PerformClick(); }
                         if (item.Text == "Fade when idle") { item.PerformClick(); Require(!context.Settings.fadeWhenIdle,"Menu fade switch must apply immediately."); }
+                        if (item.Text == "Hide pill after inactivity") { item.PerformClick(); Require(context.Settings.autoHide,"The menu must enable automatic hiding."); context.Menu.Refresh(); }
+                        if (item.Text == "Hide after") {
+                            foreach (ToolStripItem choice in ((ToolStripMenuItem)item).DropDownItems) {
+                                choice.PerformClick();
+                                Require(context.Settings.autoHideSeconds == (choice.Text == "3 seconds" ? 3 : 5),"Menu delay choices must apply numeric settings immediately.");
+                            }
+                        }
                     }
-                    Console.WriteLine("PASS: native PerMonitorV2 drawing at " + form.RenderDpi + " DPI, rounded corners, Small/Medium/Large sizes, idle fade/hover, locked dragging and menu controls");
+                    Console.WriteLine("PASS: automatic hide defaults/3/5/off, continued speech, hover/expanded controls, native " + form.RenderDpi + " DPI, sizes, fading, lock and menu controls");
                     Require(!form.Visible, "The check must not display a window.");
                 }
                 context.Dispose();

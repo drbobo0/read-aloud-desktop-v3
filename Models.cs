@@ -22,6 +22,8 @@ namespace ReadAloudDesktopV3 {
         public string placement = "bottom-right";
         public string playerSize = "small";
         public bool fadeWhenIdle = true;
+        public bool autoHide = true;
+        public int autoHideSeconds = 5;
         public bool positionLocked = false;
         public bool cleanupUrls = false;
         public bool cleanupSymbols = false;
@@ -29,6 +31,7 @@ namespace ReadAloudDesktopV3 {
         public PlayerPosition customPosition = null;
         public Shortcut[] Shortcuts() { return new[] { read, pause, stop, player }; }
         public string Validate() {
+            if (autoHideSeconds != 3 && autoHideSeconds != 5) return "Choose 3 or 5 seconds for automatic hiding.";
             if (playerSize != "small" && playerSize != "medium" && playerSize != "large") return "Choose Small, Medium or Large for the player.";
             if (placement != "bottom-right" && placement != "top-right") return "Choose bottom right or top right for the player.";
             if (customPosition != null && (Math.Abs((long)customPosition.x) > 100000 || Math.Abs((long)customPosition.y) > 100000)) return "Choose a valid player position.";

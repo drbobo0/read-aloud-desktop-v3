@@ -117,10 +117,13 @@ namespace ReadAloudDesktopV3 {
         internal void Reveal() { lastActivity = DateTime.UtcNow; if (Opacity != 1) Opacity = 1; }
         internal void StepFade(DateTime now,bool hovered) {
             if (IsDisposed) return;
-            bool awake = !bridge.Settings.fadeWhenIdle || Expanded || draggingWindow || hovered || bridge.Menu.Control.Visible;
+            bool awake = Expanded || draggingWindow || hovered || bridge.Menu.Control.Visible;
             if (awake) { lastActivity = now; if (Opacity != 1) Opacity = 1; return; }
             if (!Visible) return;
-            double target = (now-lastActivity).TotalSeconds >= 5 ? .45 : 1;
+            double idleSeconds = (now-lastActivity).TotalSeconds;
+            if (bridge.Settings.autoHide && idleSeconds >= bridge.Settings.autoHideSeconds) { Hide(); return; }
+            if (!bridge.Settings.fadeWhenIdle) { if (Opacity != 1) Opacity = 1; return; }
+            double target = idleSeconds >= 5 ? .45 : 1;
             if (Math.Abs(Opacity-target) > .01) Opacity = Math.Max(target,Opacity-.08);
         }
         protected override void OnVisibleChanged(EventArgs e) { base.OnVisibleChanged(e); if (Visible) Reveal(); }

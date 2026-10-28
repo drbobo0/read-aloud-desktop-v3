@@ -9,6 +9,8 @@
     placement: 'bottom-right',
     playerSize: 'small',
     fadeWhenIdle: true,
+    autoHide: true,
+    autoHideSeconds: 5,
     positionLocked: false,
     cleanupUrls: false,
     cleanupSymbols: false,
@@ -47,10 +49,12 @@
     result.placement = value.placement ?? 'bottom-right';
     result.playerSize = value.playerSize ?? 'small';
     if (!['small', 'medium', 'large'].includes(result.playerSize)) throw new Error('Choose Small, Medium or Large for the player.');
-    for (const name of ['fadeWhenIdle', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode']) {
+    for (const name of ['fadeWhenIdle', 'autoHide', 'positionLocked', 'cleanupUrls', 'cleanupSymbols', 'cleanupCode']) {
       if (value[name] !== undefined && typeof value[name] !== 'boolean') throw new Error('Choose a valid on/off preference.');
       result[name] = value[name] ?? defaults[name];
     }
+    result.autoHideSeconds = value.autoHideSeconds ?? defaults.autoHideSeconds;
+    if (![3, 5].includes(result.autoHideSeconds)) throw new Error('Choose 3 or 5 seconds for automatic hiding.');
     if (!['bottom-right', 'top-right'].includes(result.placement)) throw new Error('Choose bottom right or top right for the player.');
     result.customPosition = null;
     if (value.customPosition != null) {

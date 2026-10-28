@@ -9,7 +9,10 @@
 <details><summary>Shortcuts &amp; preferences</summary>
 <form id="preferences">
 <label class="shortcut">Player size<select id="playerSize"><option value="small">Small (current size)</option><option value="medium">Medium</option><option value="large">Large</option></select></label>
-<label class="check"><input type="checkbox" id="fadeWhenIdle">Fade the compact pill after 5 seconds; brighten on hover</label>
+<label class="check"><input type="checkbox" id="autoHide">Hide pill after inactivity (reading continues)</label>
+<label class="shortcut">Hide after<select id="autoHideSeconds"><option value="3">3 seconds</option><option value="5">5 seconds (default)</option></select></label>
+<p class="hint">Hover over the pill or expand its controls to keep it open. A new selection or the tray icon brings it back.</p>
+<label class="check"><input type="checkbox" id="fadeWhenIdle">Fade when staying visible (automatic hiding off)</label>
 <label class="check"><input type="checkbox" id="positionLocked">Lock position to prevent accidental dragging</label>
 <label class="shortcut">Default corner<select id="placement"><option value="bottom-right">Bottom right</option><option value="top-right">Top right</option></select></label>
 <p id="position-hint" class="hint">Drag the Read label to move the player anywhere.</p>
@@ -30,6 +33,6 @@
 <p id="save-status" class="hint" role="status" aria-live="polite"></p>
 <div class="actions"><button type="submit" class="primary" id="save">Save preferences</button><button type="button" id="reset">Restore defaults</button></div>
 </form></details>
-<footer>The compatible Read Aloud copy lets the pill hide when reading finishes. The original reader keeps manual closing.</footer>
+<footer>The pill hides after 5 seconds by default while reading continues. Change the delay or turn automatic hiding off in preferences.</footer>
 <script src="config.js"></script><script src="popup.js"></script>
 </body></html>
