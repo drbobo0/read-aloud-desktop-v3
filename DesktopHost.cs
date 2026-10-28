@@ -77,6 +77,7 @@ namespace ReadAloudDesktopV3 {
         readonly bool test;
         bool disposed;
         internal string Playback = "stopped";
+        internal string PlaybackSessionId = "";
         internal string StatusMessage = "Select text in a desktop app to begin.";
         internal BridgeContext(bool protocolTest, bool preview) {
             test = protocolTest; Preview = preview;
@@ -125,7 +126,9 @@ namespace ReadAloudDesktopV3 {
                 StatusMessage = Get(m, "message");
                 if (Player != null) Player.SetStatus(StatusMessage, Playback);
                 if (Tray != null) Tray.Text = (Preview ? "V3 Preview — " : "Read Aloud V3 — ") + (Playback == "playing" ? "Play requested" : Playback == "paused" ? "Pause requested" : "Ready");
-            } else if (type == "player") ShowPlayer(true);
+            } else if (type == "playbackSession") PlaybackSessionId = Get(m,"sessionId");
+            else if (type == "finished") FinishReading(Get(m,"sessionId"));
+            else if (type == "player") ShowPlayer(true);
             else if (type == "restart") Jump(0);
             else if (test && type == "testMove") {
                 Passage.Move(Convert.ToInt32(m["delta"]));
@@ -135,6 +138,7 @@ namespace ReadAloudDesktopV3 {
         internal void LoadPassage(string text, bool show) {
             if (Encoding.UTF8.GetByteCount(text) > 500000) { Error("Select a shorter passage (under 500 KB)."); return; }
             Passage.Load(text);
+            PlaybackSessionId = "";
             if (Player != null) { Player.SetPassage(); Player.SetExpanded(false); }
             if (show && !test) ShowPlayer();
         }
@@ -148,6 +152,12 @@ namespace ReadAloudDesktopV3 {
             Player.Show();
         }
         internal void TogglePlayer() { if (Player != null && Player.Visible) Player.SetExpanded(!Player.Expanded); else ShowPlayer(true); }
+        internal void FinishReading(string sessionId) {
+            if (String.IsNullOrEmpty(sessionId) || sessionId != PlaybackSessionId) return;
+            PlaybackSessionId = ""; Playback = "stopped"; StatusMessage = "Reading finished.";
+            if (Player != null) { Player.SetStatus(StatusMessage,Playback); Player.Hide(); }
+            if (Tray != null) Tray.Text = "Read Aloud Desktop V3 — Ready";
+        }
         internal void TogglePlayback() {
             if (Playback == "stopped") Jump(Passage.Index); else Command("togglePause",null,false);
         }
@@ -185,6 +195,7 @@ namespace ReadAloudDesktopV3 {
             Command("play", Passage.Tail, false);
         }
         internal void Command(string method, string text, bool newSession) {
+            if (method == "play" || method == "stop") PlaybackSessionId = "";
             if (Preview) {
                 if (method == "setPlacement" && (text == "bottom-right" || text == "top-right")) { Settings.placement = text; Settings.customPosition = null; Player.SetShortcuts(Settings); }
                 if (method == "togglePause") Playback = Playback == "paused" ? "playing" : "paused";

@@ -1,6 +1,10 @@
-importScripts('config.js', 'cleanup.js');
+importScripts('config.js', 'cleanup.js', 'reader-config.js');
 const TARGET = 'hdhinadidafjejdhmfkjgnolgimiaplp';
 const HOST = 'local.read_aloud_desktop_v3';
+let readerTarget = TARGET;
+let completionSupported = false;
+let activeReading;
+let readingSerial = 0;
 let settings = BridgeConfig.normalize(BridgeConfig.defaults);
 let nativePort;
 let transportReady = false;
@@ -32,20 +36,69 @@ function notify(message, force = false) {
   }, () => { void chrome.runtime.lastError; });
 }
 function problem(message) { update({ message }); notify(message); }
+async function chooseReader() {
+  const supported = await new Promise(resolve => {
+    chrome.runtime.sendMessage(CompatibleReaderId, { method: 'desktopHello' }, result => {
+      const error = chrome.runtime.lastError;
+      resolve(!error && result?.ok === true && result.protocol === 1 && result.completionEvents === true);
+    });
+  });
+  readerTarget = supported ? CompatibleReaderId : TARGET;
+  completionSupported = supported;
+  return supported;
+}
+chrome.runtime.onMessageExternal.addListener((message, sender, reply) => {
+  if (sender.id !== CompatibleReaderId || !message || !activeReading || message.sessionId !== activeReading.id) return;
+  if (!['readerCompleted', 'readerFailed'].includes(message.type)) return;
+  // Hold an end event that arrives before the play acceptance callback.
+  if (!activeReading.accepted) activeReading.pendingEnd = message;
+  else finishReading(message);
+  reply({ ok: true });
+});
+function finishReading(message) {
+  if (!activeReading || activeReading.id !== message.sessionId) return;
+  activeReading = undefined;
+  if (message.type === 'readerFailed') {
+    update({ playback: 'stopped' }); problem(message.message || 'Reading failed.'); return;
+  }
+  update({ playback: 'stopped', message: 'Reading finished.' });
+  postNative({ type: 'finished', sessionId: message.sessionId });
+}
 function sendToReadAloud(command) {
+  return sendPlayback(command);
+}
+async function sendPlayback(command) {
+  let session;
+  if (command.method === 'play') {
+    activeReading = undefined;
+    await chooseReader();
+    if (completionSupported) {
+      session = { id: Date.now().toString(36) + '_' + (++readingSerial), accepted: false };
+      activeReading = session;
+      postNative({ type: 'playbackSession', sessionId: session.id });
+    }
+  } else if (command.method === 'stop') activeReading = undefined;
   return new Promise(resolve => {
     const message = { method: command.method };
-    if (message.method === 'play') message.text = command.text;
-    chrome.runtime.sendMessage(TARGET, message, () => {
+    if (message.method === 'play') {
+      message.text = command.text;
+      if (session) { message.method = 'desktopPlay'; message.sessionId = session.id; }
+    }
+    chrome.runtime.sendMessage(readerTarget, message, result => {
       const error = chrome.runtime.lastError;
-      if (error && !/message port closed|channel closed/i.test(error.message)) {
+      if ((error && (session || !/message port closed|channel closed/i.test(error.message))) || (session && (result?.ok !== true || result.sessionId !== session.id))) {
+        if (activeReading === session) activeReading = undefined;
         update({ playback: 'stopped' });
-        problem('Could not reach Read Aloud. Keep the original extension enabled in this Chrome profile. ' + error.message);
+        problem('Could not reach Read Aloud. Keep the reader enabled in this Chrome profile. ' + (error?.message || result?.message || 'The compatible reader did not accept the passage.'));
         resolve(false);
       } else {
         const playback = { play: 'playing', pause: 'paused', resume: 'playing', stop: 'stopped' }[command.method];
         const message = { play: 'Text sent to Read Aloud.', pause: 'Pause sent to Read Aloud.', resume: 'Resume sent to Read Aloud.', stop: 'Stop sent to Read Aloud.' }[command.method];
-        update({ playback, message });
+        update({ playback, message, completionSupported });
+        if (session && activeReading === session) {
+          session.accepted = true;
+          if (session.pendingEnd) finishReading(session.pendingEnd);
+        }
         resolve(true);
       }
     });
@@ -73,7 +126,8 @@ async function handleCommand(input) {
     return;
   }
   if (input.method === 'settings') {
-    await chrome.tabs.create({ url: `chrome://extensions/?id=${TARGET}` });
+    if (!state.hasPassage || state.playback === 'stopped') await chooseReader();
+    await chrome.tabs.create({ url: `chrome://extensions/?id=${readerTarget}` });
     problem('Open Read Aloud’s Extension options to change its voice or speed.');
     return;
   }
@@ -148,6 +202,7 @@ async function connect() {
     const error = chrome.runtime.lastError;
     if (nativePort !== port) return;
     nativePort = undefined; transportReady = false;
+    activeReading = undefined;
     for (const request of pending.values()) { clearTimeout(request.timer); request.resolve({ ok: false, message: 'The Windows helper disconnected.' }); }
     pending.clear();
     const message = error ? error.message + ' Run V3’s Install.cmd, then click Enable / retry.' : 'V3 desktop shortcuts disconnected. Click Enable / retry.';
@@ -171,6 +226,7 @@ async function saveSettings(candidate) {
   return { ok: true, settings, message: state.message };
 }
 async function disable() {
+  activeReading = undefined;
   state.enabled = false; await chrome.storage.local.set({ enabled: false });
   if (state.hasPassage) await sendToReadAloud({ method: 'stop' });
   const oldPort = nativePort; nativePort = undefined; transportReady = false;

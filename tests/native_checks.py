@@ -123,6 +123,17 @@ snapshots = [ROOT / 'tests' / name for name in ('v1-before.json', 'previous-vers
 for snapshot in snapshots:
     if snapshot.is_file():
         for entry in json.loads(snapshot.read_text(encoding='utf-8-sig')):
+            previous_file = Path(entry['Path'])
+            if previous_file.name == 'native-host-v2.json':
+                # Re-running V2's installer can change JSON formatting/order without changing registration.
+                actual = json.loads(previous_file.read_text(encoding='utf-8-sig'))
+                previous_root = previous_file.parent
+                previous_runtime = json.loads((previous_root / 'runtime.json').read_text())
+                previous_identity = json.loads((previous_root / 'identity.json').read_text())
+                assert actual == {'name': 'local.read_aloud_desktop_v2', 'description': 'Read Aloud Desktop V2 helper',
+                                  'path': str(previous_root / previous_runtime['helper']), 'type': 'stdio',
+                                  'allowed_origins': [f"chrome-extension://{previous_identity['id']}/"]}
+                continue
             assert hashlib.sha256(Path(entry['Path']).read_bytes()).hexdigest().upper() == entry['Hash'], entry['Path']
 if any(snapshot.is_file() for snapshot in snapshots):
     print('PASS: local previous-version file preservation checks')

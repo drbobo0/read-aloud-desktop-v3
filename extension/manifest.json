@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Read Aloud Desktop Bridge V3",
   "description": "Desktop reading with a tray icon, fading pill, sizes, position lock and optional text cleanup.",
-  "version": "3.0.0",
+  "version": "3.1.0",
+  "externally_connectable": { "ids": ["hfkpfdkphilnihhgbmcdepgecbmnemhf"] },
   "minimum_chrome_version": "105",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA9M/2l16WoWRlz7OEltePulT9DhXyn6rvXhuHq+fH8WjZCTvhlO5Y1LEXGILzdGRP7dnXj4/NAYCU4stiFZxNbP9G1OEGZ+7VKHVs7/pxxgu7jYV3Fr5akJF+sd2EAZk6ZRd4PEn1yJAbZU69sjKO0Pwu8zOniLYxBDDQWXotJXCMwjvb9TcpLJMTEEsqhiLZDdhwal5mRrUeFwtdV+OeYLLX1vuOms4oLB4b1v06dlhnmLygKmB4kpxNQGtCZpUG4/HkdP9inS03HBeWVpq/T/uU82s9hMIkSaTDEIdCUpuJFAoazDl26blGHnW/wKXAD8U6w5gIWCLzVxhQ/3FMdQIDAQAB",
   "permissions": [

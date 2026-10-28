@@ -1,2 +1,2 @@
 @echo off
-start "" "%~dp0PlayerPreview-3.0.0.exe"
+start "" "%~dp0PlayerPreview-3.1.0.exe"

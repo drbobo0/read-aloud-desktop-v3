@@ -12,6 +12,7 @@ const chrome = {
     id: 'v3-companion', lastError: undefined,
     onStartup: { addListener(fn) { listeners.startup = fn; } },
     onMessage: { addListener(fn) { listeners.message = fn; } },
+    onMessageExternal: { addListener(fn) { listeners.external = fn; } },
     connectNative(name) {
       assert.equal(name, 'local.read_aloud_desktop_v3');
       const port = {
@@ -29,6 +30,9 @@ const chrome = {
       ports.push(port); return port;
     },
     sendMessage(id, message, callback) {
+      if (id !== 'hdhinadidafjejdhmfkjgnolgimiaplp') {
+        chrome.runtime.lastError = { message: 'Compatible reader is not installed.' }; callback(); chrome.runtime.lastError = undefined; return;
+      }
       assert.equal(id, 'hdhinadidafjejdhmfkjgnolgimiaplp');
       sent.push(JSON.parse(JSON.stringify(message)));
       chrome.runtime.lastError = deliveryError; callback(); chrome.runtime.lastError = undefined;
